@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import './App.css';
-import TodoList from './TodoList';
-import AddTodoForm from './AddTodoForm';
+import { useState, useEffect } from 'react'
+import './App.css'
+import TodoList from './TodoList'
+import AddTodoForm from './AddTodoForm'
 
 const useSemiPersistentState = () => {
   const [todoList, setTodoList] = useState(()=> {
-    const savedTodos = localStorage.getItem('savedTodoList');
-    return savedTodos ? JSON.parse(savedTodos) : [];
+    const savedTodos = localStorage.getItem('savedTodoList')
+    return savedTodos ? JSON.parse(savedTodos) : []
   });
 
   const [isLoading, setIsLoading] = useState(true)
