@@ -1,46 +1,107 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import './App.css';
-import TodoList from './TodoList';
-import AddTodoForm from './AddTodoForm';
+import { useState, useEffect } from 'react'
+import './App.css'
+import TodoList from './TodoList'
+import AddTodoForm from './AddTodoForm'
+
+const useSemiPersistentState = () => {
+  const [todoList, setTodoList] = useState(()=> {
+    const savedTodos = localStorage.getItem('savedTodoList')
+    return savedTodos ? JSON.parse(savedTodos) : []
+  });
+
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const fetchData = async () => {
+    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`
+    const options = {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+    }
+
+    try {
+      const response = await fetch(url, options)
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`)
+      }
+      const data = await response.json()
+      console.log(data)
+      const todos = data.records.map(record=> ({
+        id: record.id,
+        title: record.fields.title,
+      }))
+
+      console.log(todos)
+      setTodoList(todos)
+      localStorage.setItem('savedTodoList', JSON.stringify(todos))
+
+    } catch (error) {
+      console.error('Fetch Error:', error.message)
+      setError(error)
+    } finally {
+      setIsLoading(false)
+    }
+  
+  }
+
+  const addTodo = async (title) => {
+    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`
+    const options = {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fields: {
+          title: title
+        }
+      })
+    }
+
+    try {
+      const response = await fetch(url, options)
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`)
+      }
+      const data = await response.json()
+
+      const newTodo = {
+        id: data.id,
+        title: data.fields.title
+      }
+      setTodoList(prevTodos => [...prevTodos, newTodo])
+      localStorage.setItem('savedTodoList', JSON.stringify([...todoList, newTodo]))
+
+    } catch (error) {
+      console.error('Add Error:', error.message)
+      setError(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  
+  }
+
+  useEffect(()=>{
+    fetchData()
+  }, []);
+  return [todoList, addTodo, isLoading, error];
+}
 
 function App() {
-  const [todoList, setTodoList] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resolve({
-          data: {
-            todoList: JSON.parse(localStorage.getItem('savedTodoList')) || []
-          }
-        });
-      }, 2000);
-    })
-    .then((result) => {
-      setTodoList(result.data.todoList);
-      setIsLoading(false);
-    })
-    .catch((error) => {
-      console.error('Failed to fetch todo list:', error);
-      setIsLoading(false);
-    });
-  }, []);
-
-  const addTodo = (newTodo) =>{
-    setTodoList((prevTodos) => [...prevTodos, newTodo]);
-  };
+  const [todoList, addTodo, setTodoList, isLoading, error] = useSemiPersistentState()
   
-  const removeTodo  = (id) => {
-    setTodoList((prevTodos)=> prevTodos.filter((todo)=> todo.id!==id));
-  };
+  const removeTodo  = async (id) => {
+    setTodoList((prevTodos)=> prevTodos.filter((todo)=> todo.id!==id))
+  }
 
-  useEffect(() => {
-    if(!isLoading) {
-      localStorage.setItem('savedTodoList', JSON.stringify(todoList));
-    }
-  }, [todoList, isLoading]);
+  if (isLoading) return <div> Loading... </div>
+  if (error) return <div> Error: {error.message} </div>
+
+
   return (
     <BrowserRouter>
       <Routes>
@@ -61,4 +122,4 @@ function App() {
   )
 }
 
-export default App;
+export default App
