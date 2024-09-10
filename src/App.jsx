@@ -13,11 +13,11 @@ const useSemiPersistentState = () => {
   const [error, setError] = useState(null)
 
   const fetchData = async () => {
-    const url = 'https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}'
+    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`
     const options = {
       method: 'GET',
       headers: {
-        Authorization: 'Bearer ${import.meta.env.VITE_AIRTABLE_API_TOKEN}',
+        Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_TOKEN}`,
         'Content-Type': 'application/json',
       },
     }
@@ -25,7 +25,7 @@ const useSemiPersistentState = () => {
     try {
       const response = await fetch(url, options)
       if (!response.ok) {
-        throw new Error('Error: ${response.status}')
+        throw new Error(`Error: ${response.status}`)
       }
       const data = await response.json()
       console.log(data)
@@ -36,6 +36,7 @@ const useSemiPersistentState = () => {
 
       console.log(todos)
       setTodoList(todos)
+      localStorage.setItem('savedTodoList', JSON.stringify(todos))
 
     } catch (error) {
       console.error('Fetch Error:', error.message)
@@ -46,21 +47,55 @@ const useSemiPersistentState = () => {
   
   }
 
+  const addTodo = async (title) => {
+    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`
+    const options = {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fields: {
+          title: title
+        }
+      })
+    }
+
+    try {
+      const response = await fetch(url, options)
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`)
+      }
+      const data = await response.json()
+
+      const newTodo = {
+        id: data.id,
+        title: data.fields.title
+      }
+      setTodoList(prevTodos => [...prevTodos, newTodo])
+      localStorage.setItem('savedTodoList', JSON.stringify([...todoList, newTodo]))
+
+    } catch (error) {
+      console.error('Add Error:', error.message)
+      setError(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  
+  }
+
   useEffect(()=>{
     fetchData()
   }, []);
-  return [todoList, setTodoList, isLoading, error];
+  return [todoList, addTodo, isLoading, error];
 }
 
 function App() {
-  const [todoList, setTodoList, isLoading, error] = useSemiPersistentState();
-
-  const addTodo = (newTodo) =>{
-    setTodoList((prevTodos) => [...prevTodos, newTodo]);
-  };
+  const [todoList, addTodo, setTodoList, isLoading, error] = useSemiPersistentState()
   
-  const removeTodo  = (id) => {
-    setTodoList((prevTodos)=> prevTodos.filter((todo)=> todo.id!==id));
+  const removeTodo  = async (id) => {
+    setTodoList((prevTodos)=> prevTodos.filter((todo)=> todo.id!==id))
   }
 
   if (isLoading) return <div> Loading... </div>
@@ -75,4 +110,4 @@ function App() {
   )
 }
 
-export default App;
+export default App
