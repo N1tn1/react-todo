@@ -4,7 +4,6 @@ import './App.css';
 import TodoList from './components/TodoList';
 import AddTodoForm from './components/AddTodoForm';
 
-
 const useSemiPersistentState = () => {
   const [todoList, setTodoList] = useState(() => {
     const savedTodos = localStorage.getItem('todos');
@@ -22,7 +21,7 @@ const useSemiPersistentState = () => {
       }
     };
 
-    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
+    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}?view=Grid%20view`;
     
     try {
       const response = await fetch(url, options);
@@ -32,7 +31,8 @@ const useSemiPersistentState = () => {
       const data = await response.json();
       const todos = data.records.map(record => ({
         id: record.id,
-        title: record.fields.title
+        title: record.fields.title,
+        isCompleted: record.fields.isCompleted || false,
       }));
       setTodoList(todos);
       setIsLoading(false);
@@ -75,7 +75,7 @@ const useSemiPersistentState = () => {
         throw new Error(`Error: ${response.status}`);
       }
       const data = await response.json();
-      setTodoList((prevTodos) => [...prevTodos, { id: data.id, title: newTodo.title }]);
+      setTodoList((prevTodos) => [...prevTodos, { id: data.id, title: newTodo.title, isCompleted: false }]);
     } catch (error) {
       console.error("Error adding todo:", error.message);
     }
@@ -86,6 +86,22 @@ const useSemiPersistentState = () => {
 
 function App() {
   const { todoList, addTodo, isLoading, error, setTodoList } = useSemiPersistentState();
+  const [sortOrder, setSortOrder] = useState('asc');
+
+  const toggleSortOrder = () => {
+    setSortOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
+  };
+
+  const sortedTodoList = [...todoList].sort((a, b) => {
+    const titleA = a.title.toLowerCase();
+    const titleB = b.title.toLowerCase();
+
+    if (sortOrder === 'asc') {
+      return titleA < titleB ? -1 : titleA > titleB ? 1 : 0;
+    } else {
+      return titleA > titleB ? -1 : titleA < titleB ? 1 : 0;
+    }
+  });
 
   const removeTodo = async (id) => {
     const options = {
@@ -125,10 +141,14 @@ function App() {
             <>
               <h1>ToDo List</h1>
               <AddTodoForm onAddTodo={addTodo} />
+              <button onClick={toggleSortOrder} style={{ display: 'flex', alignItems: 'center' }}>
+                <i className={`fas fa-sort-${sortOrder === 'asc' ? 'down' : 'up'}`}></i>
+                <span style={{ marginLeft: '5px' }}>Sort {sortOrder === 'asc' ? '' : ''}</span>
+              </button>
               {isLoading ? (
                 <p>Loading...</p>
               ) : (
-                <TodoList todoList={todoList} onRemoveTodo={removeTodo} onToggleTodo={toggleTodo}/>
+                <TodoList todoList={sortedTodoList} onRemoveTodo={removeTodo} onToggleTodo={toggleTodo} />
               )}
               {error && <p style={{ color: 'red' }}>Error: {error.message}</p>}
             </>
