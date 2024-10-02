@@ -1,43 +1,29 @@
-import React, {useState} from 'react';
+import React, { useState, useRef } from 'react';
 import InputWithLabel from './InputWithLabel';
 
-const AddTodoForm = ({onAddTodo}) =>{
+const AddTodoForm = ({ onAddTodo }) => {
     const [todoTitle, setTodoTitle] = useState('');
-    const [error, setError] = useState('');
-    
+    const inputRef = useRef(null);
+
     const handleTitleChange = (event) => {
-        const newTodoTitle = event.target.value;
-        setTodoTitle(newTodoTitle);
-        setError('');
+        setTodoTitle(event.target.value);
     };
 
     const handleAddTodo = (event) => {
         event.preventDefault();
-        if (todoTitle.trim() === '') 
-        {
-            setError('Error: Todo must not be empty');
-        }
-        else
-        {
-            onAddTodo({title: todoTitle, id: Date.now()});
-            setTodoTitle('');
-            setError('');
-        }
+        onAddTodo({ title: todoTitle });
+        setTodoTitle('');
     };
-    return(
-        <>
-            <form onSubmit={handleAddTodo}>
-                <InputWithLabel
-                    id="todo-title"
-                    name="todo-title"
-                    value={todoTitle}
-                    onChange={handleTitleChange}
-                > Title </InputWithLabel>
-                <button type = "submit"> Add </button>
-                <p style={{color:'red'}}> {error} </p>
-            </form>
-        </>
-    )
 
-}
+    return (
+        <form onSubmit={handleAddTodo}>
+            <InputWithLabel value={todoTitle} onChange={handleTitleChange}>
+                Title
+            </InputWithLabel>
+            
+            <button type="submit"> Add </button>
+        </form>
+    );
+};
+
 export default AddTodoForm;
