@@ -1,5 +1,6 @@
 import React from 'react';
 import TodoListItem from './TodoListItem';
+import PropTypes from 'prop-types';
 
 const TodoList = ({ todoList, onRemoveTodo, onToggleTodo }) => {
   const completedTodos = todoList.filter(todo => todo.isCompleted);
@@ -39,5 +40,16 @@ const TodoList = ({ todoList, onRemoveTodo, onToggleTodo }) => {
       )}
     </>
   );
+};
+TodoList.propTypes = {
+  todoList: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+      isCompleted: PropTypes.bool.isRequired,
+    })
+  ).isRequired,
+  onRemoveTodo: PropTypes.func.isRequired,
+  onToggleTodo: PropTypes.func.isRequired,
 };
 export default TodoList;
