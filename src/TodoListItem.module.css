@@ -1,0 +1,27 @@
+.ListItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    color: #461717;
+    font-weight: 1000;
+    font-size: 1.2em;
+}
+
+.todoContent {
+    display: flex;
+    align-items: center;
+}
+
+.removeButton {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.removeButton:hover {
+    background-color: #ff1a1a;
+}

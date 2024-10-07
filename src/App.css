@@ -40,3 +40,53 @@
 .read-the-docs {
   color: #888;
 }
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background: radial-gradient(circle, #64afb4, #a6a06c);
+  color: #dae5de;
+  font-family: 'Arial', sans-serif;
+}
+
+h1, h2, h3 {
+  margin: 50px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+input {
+  padding: 10px;
+  border: 1px solid #ccc; 
+  border-radius: 5px;
+}
+
+button {
+  background-color: #3a1d9c;
+  color: rgb(237, 227, 227);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #686248;
+}
+
+ol {
+  padding-left: 20px;
+  margin: 0;
+}
+
+li {
+  margin: 5px 0;
+}
+
+@media (max-width: 600px) {
+  body {
+      padding: 10px;
+  }
+
+  h1 {
+      font-size: 1.5em;
+  }
+}
